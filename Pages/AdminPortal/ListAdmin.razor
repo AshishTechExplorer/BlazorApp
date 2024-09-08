@@ -1,0 +1,176 @@
+﻿@page "/"
+@using AspNetCoreBlazorTest.Models
+@inject HttpClient Http
+@inject IJSRuntime JsRuntime
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<title>List admin</title>
+
+<style>
+    .page-content {
+        overflow: auto;
+        max-height: 100%;
+    }
+</style>
+
+<main class="full-box main-container">
+    <!-- Nav lateral -->
+    <section class="full-box nav-lateral">
+        <div class="full-box nav-lateral-bg show-nav-lateral"></div>
+        <div class="full-box nav-lateral-content">
+            <figure class="full-box nav-lateral-avatar">
+                <i class="far fa-times-circle show-nav-lateral"></i>
+                <img src="./assets/avatar/Avatar.png" class="img-fluid" alt="Avatar">
+                <figcaption class="roboto-medium text-center">
+                    Carlos Alfaro <br><small class="roboto-condensed-light">Web Developer</small>
+                </figcaption>
+            </figure>
+            <div class="full-box nav-lateral-bar"></div>
+            <nav class="full-box nav-lateral-menu">
+                <ul>
+                    <li>
+                        <a href="home.html"><i class="fab fa-dashcube fa-fw"></i> &nbsp; Dashboard</a>
+                    </li>
+
+                    <li>
+                        <a href="#" class="nav-btn-submenu"><i class="fas fa-user-tie fa-fw"></i> &nbsp; Administrator <i class="fas fa-chevron-down"></i></a>
+                        <ul>
+                            <li><a href="admin.html"><i class="fas fa-user-plus fa-fw"></i> &nbsp; New admin</a></li>
+                            <li><a href="listadmin.html"><i class="fas fa-users fa-fw"></i> &nbsp; List admin</a></li>
+                        </ul>
+                    </li>
+
+                    <li>
+                        <a href="#" class="nav-btn-submenu"><i class="fas fa-box-open fa-fw"></i> &nbsp; Products <i class="fas fa-chevron-down"></i></a>
+                        <ul>
+                            <li><a href="product.html"><i class="fas fa-box fa-fw"></i> &nbsp; New product</a></li>
+                            <li><a href="productlist.html"><i class="fas fa-boxes fa-fw"></i> &nbsp; List products</a></li>
+                        </ul>
+                    </li>
+
+                    <li>
+                        <a href="base.html"><i class="fas fa-columns fa-fw"></i> &nbsp; Base template</a>
+                    </li>
+
+                </ul>
+            </nav>
+        </div>
+    </section>
+
+    <!-- Page content -->
+    <section class="full-box page-content">
+        <nav class="full-box navbar-info">
+            <a href="#" class="float-left show-nav-lateral"><i class="fas fa-exchange-alt"></i></a>
+            <a href="#" data-toggle="modal" data-target="#ModalHelp"><i class="far fa-question-circle"></i></a>
+            <a href="#"><i class="fas fa-user-cog"></i></a>
+            <a href="#" class="btn-exit-system"><i class="fas fa-power-off"></i></a>
+        </nav>
+
+        <!-- Page header -->
+        <div class="full-box page-header">
+            <h3 class="text-left">
+                <i class="fas fa-users fa-fw"></i> &nbsp; LIST ADMIN
+            </h3>
+            <p class="text-justify">
+                Lorem ipsum dolor sit amet, consectetur adipisicing elit. Suscipit nostrum rerum animi natus beatae ex. Culpa blanditiis tempore amet alias placeat, obcaecati quaerat ullam, sunt est, odio aut veniam ratione.
+            </p>
+        </div>
+
+        <div class="container-fluid">
+            <ul class="full-box list-unstyled page-nav-tabs">
+                <li>
+                    <a href="admin.html"><i class="fas fa-user-plus fa-fw"></i> &nbsp; NEW ADMIN</a>
+                </li>
+                <li>
+                    <a class="active" href="listadmin.html"><i class="fas fa-users fa-fw"></i> &nbsp; LIST ADMIN</a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Content -->
+        <div class="container-fluid">
+            <div class="table-responsive">
+                <table class="table table-dark table-sm">
+                    <thead>
+                        <tr class="text-center roboto-medium">
+                            <th>#</th>
+                            <th>NAME</th>
+                            <th>LAST NAME</th>
+                            <th>UPDATE</th>
+                            <th>DELETE</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (_details != null)
+                        {
+                            @foreach (var detail in _details)
+                            {
+                                <tr class="text-center">
+                                    <td>@detail.Id</td>
+                                    <td>@detail.Name</td>
+                                    <td>@detail.UserName</td>
+                                    <td>
+                                        <button type="button" class="btn btn-success">
+                                            <i class="fas fa-sync-alt"></i>
+
+                                        </button>
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-warning" @onclick="() => ShowModal(detail)">
+                                            <i class="far fa-trash-alt"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <Delete IsVisible="@_isModalVisible" IsVisibleChanged="((value) => _isModalVisible = value)"
+                    OnConfirm="IsDeleteConfirmed">
+                Are you sure you want to delete @Title?
+            </Delete>
+        </div>
+    </section>
+</main>
+
+@code {
+    private bool _isModalVisible = false;
+
+    private int ItemToDelete { get; set; }
+    private string Title { get; set; }
+
+    private void ShowModal(UserDetails details)
+    {
+        _isModalVisible = true;
+        ItemToDelete = details.Id;
+        Title = details.Name;
+    }
+
+    private async Task IsDeleteConfirmed()
+    {
+        _isModalVisible = false;
+        await JsRuntime.InvokeVoidAsync("showLoader");
+        await Task.Delay(10000); // Wait for 10 seconds
+                                 // Hide the loader
+        await JsRuntime.InvokeVoidAsync("hideLoader");
+        await JsRuntime.InvokeVoidAsync("showMessage", "Loading completed!");
+        foreach (var detail in _details)
+        {
+            if (detail.Id == ItemToDelete)
+            {
+                _details.Remove(detail);
+                break;
+            }
+        }
+    }
+
+    private List<UserDetails>? _details;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _details ??= await Http.GetFromJsonAsync<List<UserDetails>>("https://jsonplaceholder.typicode.com/users");
+    }
+
+
+}
